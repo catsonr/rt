@@ -17,8 +17,10 @@ static SDL_Renderer *renderer = NULL;
 static Uint64 then = 0, now = 0;
 static double timeElapsed = 0; // seconds
 static Uint64 freq = 0;
-
 const float debug_textScale = 1.0f;
+
+// RTIOW stuff
+RayTracingInOneWeekend rtiow;
 
 /* HELPER FUNCTIONS */
 void debug_drawDebugInfo(SDL_Renderer* renderer, double fps)
@@ -64,9 +66,6 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     freq = SDL_GetPerformanceFrequency();
     then = SDL_GetPerformanceCounter();
     
-    // RTIOW initialization
-    RayTracingInOneWeekend r;
-
     return SDL_APP_CONTINUE;
 }
 
@@ -95,6 +94,9 @@ SDL_AppResult SDL_AppIterate(void* appstate)
     // clear screen
     SDL_SetRenderDrawColor(renderer, 10, 10, 10, 255);
     SDL_RenderClear(renderer);
+    
+    // draw current frame of RTIOW
+    rtiow.draw();
     
     // draw fps and elapsed time
     debug_drawDebugInfo(renderer, fps);

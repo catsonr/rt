@@ -13,15 +13,24 @@ class Film;
 
 class Camera
 {
-public:
-    /* PUBLIC MEMBERS */
+protected:
+    /* PROTECTED MEMBERS */
     Transform world_to_camera, camera_to_world;
     float clip_near, clip_far;
     float shutter_open, shutter_close;
     Film* film;
     
+public:
     /* CONSTRUCTORS */
-    Camera(const Transform& world_to_camera, float clip_near, float clip_far, float shutter_open = 0.0f, float shutter_close = 0.0f, Film* film = nullptr);
+    Camera(const Transform& world_to_camera, float clip_near, float clip_far, float shutter_open = 0.0f, float shutter_close = 0.0f, Film* film = nullptr) :
+        world_to_camera(world_to_camera),
+        camera_to_world(world_to_camera.getInverse()),
+        clip_near(clip_near),
+        clip_far(clip_far),
+        shutter_open(shutter_open),
+        shutter_close(shutter_close),
+        film(film)
+    {}
 
     /* VIRTUAL METHODS */
     virtual float generateRay(Sample& sample, Ray* ray) const = 0;
@@ -29,12 +38,13 @@ public:
 
 class ProjectiveCamera : public Camera
 {
-public:
-    /* PUBLIC MEMBERS */    
+protected:
+    /* PROTECTEd MEMBERS */    
     Transform camera_to_screen, world_to_screen, raster_to_camera;
     Transform screen_to_raster, raster_to_screen;
     float lensRadius, focalDistance;
 
+public:
     /* CONSTRUCTORS */
     ProjectiveCamera(
         const Transform& world_to_camera,
@@ -54,7 +64,7 @@ public:
     {
         // compute projective camera transformations
         camera_to_screen = projection;
-        world_to_screen = camera_to_screen * world_to_screen;
+        world_to_screen = camera_to_screen * world_to_camera;
 
         // compute projective camera screen transformations
         // screen_to_raster should actually be based on the Film's xResolution and yResolution per (pg. 260) in pbrt 2nd ed.
@@ -73,7 +83,7 @@ public:
     OrthographicCamera(const Transform& world_to_camera,
         const float screen[4], float clip_near, float clip_far,
         float shutter_open, float shutter_close, float lensRadius, float focalDistance,
-        Film* film
+        Film* film = nullptr
     ):
         ProjectiveCamera(world_to_camera, Transform::orthographic(clip_near, clip_far), screen, clip_near, clip_far, shutter_open, shutter_close, lensRadius, focalDistance, film)
     {}
