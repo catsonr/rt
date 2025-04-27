@@ -19,7 +19,7 @@ public:
     std::vector<u_int32_t> texturepixels{ width * height };
     float t { 0.0f };
     
-    //ProjectiveCamera camera;
+    OrthographicCamera camera();
     
     /* CONSTRUCTORS */
     RayTracingInOneWeekend()

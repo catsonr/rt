@@ -1,6 +1,6 @@
 /*
     Camera is an abstract base class that all camera types inherit from
-    ProjectiveCamera is an abstract base class that all projective cameras inherit from (namely, perspective and orthographic)
+    ProjectiveCamera is an abstract base class that all projective cameras inherit from (namely, orthographic and perspective cameras)
 */
 
 #include "Transform.h"
@@ -33,6 +33,7 @@ public:
     /* PUBLIC MEMBERS */    
     Transform camera_to_screen, world_to_screen, raster_to_camera;
     Transform screen_to_raster, raster_to_screen;
+    float lensRadius, focalDistance;
 
     /* CONSTRUCTORS */
     ProjectiveCamera(
@@ -47,10 +48,10 @@ public:
         float focalDistance,
         Film* film = nullptr
     ) :
-        Camera(world_to_camera, clip_near, clip_far, shutter_open, shutter_close, film)
+        Camera(world_to_camera, clip_near, clip_far, shutter_open, shutter_close, film),
+        lensRadius(lensRadius),
+        focalDistance(focalDistance)
     {
-        // initialize depth of field parameters
-
         // compute projective camera transformations
         camera_to_screen = projection;
         world_to_screen = camera_to_screen * world_to_screen;
@@ -60,13 +61,9 @@ public:
         screen_to_raster = Transform::scale( (float)rt::CANVAS_WIDTH, (float)rt::CANVAS_HEIGHT, 1.0f ) *
                         Transform::scale( 1.0f / (screen[1] - screen[0]), 1.0f / (screen[2] - screen[3]), 1.0f ) *
                         Transform::translate( Vector(-screen[0], -screen[3], 0.0f) );
-        raster_to_screen = screen_to_raster.m_inv;
-    }
-    
-    /* PUBLIC METHODS */
-    float generateRay(Sample& sample, Ray* ray) const override
-    {
-        return INFINITY;
+        raster_to_screen = screen_to_raster.getInverse();
+        
+        raster_to_camera = camera_to_screen.getInverse() * raster_to_screen;
     }
 };
 
@@ -95,7 +92,13 @@ public:
         // set ray time value
         ray->t = rt::lerp(sample.time, shutter_open, shutter_close);
 
-        // modify ray for depth of field 
+        // modify ray for depth of field @ (pg. 269) of pbrt 2nd ed.
+        if(lensRadius > 0.0f)
+        {
+            // sample point on lens
+            // compute point on plane of focus
+            // update ray for effect of lens
+        }
 
         ray->t_min = 0.0f;
         ray->t_max = clip_far - clip_near;

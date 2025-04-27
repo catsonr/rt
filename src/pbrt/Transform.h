@@ -32,6 +32,11 @@ public:
     // returns true if the transformation causes the resulting matrix to swap handedness
     bool swapsHandedness() const;
     
+    inline Transform getInverse() const
+    {
+        return Transform(m_inv, m);
+    }
+    
     static Transform translate(const Vector& delta);
     static Transform scale(float x, float y, float z);
     static Transform rotateX(float angle);

@@ -21,7 +21,7 @@ public:
     /* CONSTRUCTORS */
     Shape(const Transform& object_to_world, bool reverseOrientation = false) :
         object_to_world(object_to_world),
-        world_to_object(object_to_world.m_inv),
+        world_to_object(object_to_world.getInverse()),
         reverseOrientation(reverseOrientation),
         transformSwapsHandedness( object_to_world.swapsHandedness() )
     {}
