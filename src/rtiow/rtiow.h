@@ -6,6 +6,7 @@
 #include "pbrt.h"
 
 class Shape;
+#include "Camera.h"
 
 struct RayTracingInOneWeekend
 {
@@ -15,8 +16,10 @@ public:
     unsigned int height { rt::CANVAS_HEIGHT };
 
     std::vector<Shape>* shapes { nullptr };
-    std::vector<Uint32> texturepixels{ width * height };
+    std::vector<u_int32_t> texturepixels{ width * height };
     float t { 0.0f };
+    
+    //ProjectiveCamera camera;
     
     /* CONSTRUCTORS */
     RayTracingInOneWeekend()

@@ -159,3 +159,10 @@ Transform Transform::lookAt(const Point& pos, const Point& lookingAt, const Vect
     
     return Transform(camera_to_world->inverse(), std::make_shared<Mat4>(*camera_to_world));
 }
+
+// implementation @ (pg. 263) of pbrt 2nd ed.
+Transform Transform::orthographic(float clip_near, float clip_far)
+{
+    return Transform::scale( 1.0f, 1.0f, 1.0f / (clip_far - clip_near) ) *
+        Transform::translate( Vector(0.0f, 0.0f, -clip_near) );
+}

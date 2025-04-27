@@ -35,17 +35,7 @@ Mat4::Mat4(
 }
 
 /* PUBLIC METHODS */
-std::shared_ptr<Mat4> Mat4::transpose() const
-{
-    return std::make_shared<Mat4>(
-        m[0][0], m[1][0], m[2][0], m[3][0],
-        m[0][1], m[1][1], m[2][1], m[3][1],
-        m[0][2], m[1][2], m[2][2], m[3][2],
-        m[0][3], m[1][3], m[2][3], m[3][3]
-    );
-}
-
-std::shared_ptr<Mat4> Mat4::multiply(const std::shared_ptr<Mat4> m1, const std::shared_ptr<Mat4> m2) const
+std::shared_ptr<Mat4> Mat4::multiply(const std::shared_ptr<Mat4> m1, const std::shared_ptr<Mat4> m2)
 {
     float r[4][4];
 
@@ -58,6 +48,16 @@ std::shared_ptr<Mat4> Mat4::multiply(const std::shared_ptr<Mat4> m1, const std::
                 m1->m[row][3] * m2->m[3][col];
     
     return std::make_shared<Mat4>(r);
+}
+
+std::shared_ptr<Mat4> Mat4::transpose() const
+{
+    return std::make_shared<Mat4>(
+        m[0][0], m[1][0], m[2][0], m[3][0],
+        m[0][1], m[1][1], m[2][1], m[3][1],
+        m[0][2], m[1][2], m[2][2], m[3][2],
+        m[0][3], m[1][3], m[2][3], m[3][3]
+    );
 }
 
 // chatgpt code

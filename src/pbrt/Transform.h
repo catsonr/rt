@@ -39,8 +39,17 @@ public:
     static Transform rotateZ(float angle);
     //Transform rotate(const Vector& axis, float angle); // implementation @ (pg. 74) of pbrt 2nd ed.
     static Transform lookAt(const Point& pos, const Point& lookingAt, const Vector& up);
+    static Transform orthographic(float clip_near, float clip_far);
     
     /* INLINE OPERATOR OVERLOADS */
+    inline Transform operator*(const Transform& t2) const // transform composition (multiplication)
+    {
+        std::shared_ptr<Mat4> m1 = Mat4::multiply(m, t2.m);
+        std::shared_ptr<Mat4> m2 = Mat4::multiply(t2.m_inv, m_inv);
+        
+        return Transform(m1, m2);
+    }
+
     inline Point operator()(const Point& p) const // transforming a point
     {
         float x = m->m[0][0]*p.x + m->m[0][1]*p.y + m->m[0][2]*p.z + m->m[0][3];

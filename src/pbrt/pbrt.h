@@ -54,6 +54,11 @@ namespace rt
 
         return value;
     }
+    // linear interpolation
+    constexpr float lerp(float t, float v1, float v2)
+    {
+        return (1.0f - t)*v1 + t*v2;
+    }
     // computes i % mod for all integers
     constexpr int mod(int i, int mod)
     {

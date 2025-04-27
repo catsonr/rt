@@ -33,8 +33,9 @@ public:
     );
     
     /* PUBLIC METHODS */
+    static std::shared_ptr<Mat4> multiply(const std::shared_ptr<Mat4> m1, const std::shared_ptr<Mat4> m2);
+
     std::shared_ptr<Mat4> transpose() const;
-    std::shared_ptr<Mat4> multiply(const std::shared_ptr<Mat4> m1, const std::shared_ptr<Mat4> m2) const;
     std::shared_ptr<Mat4> inverse() const;
     void print() const;
 };
