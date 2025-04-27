@@ -20,7 +20,7 @@ static Uint64 freq = 0;
 const float debug_textScale = 1.0f;
 
 // RTIOW stuff
-RayTracingInOneWeekend rtiow;
+std::unique_ptr<RayTracingInOneWeekend> rtiow;
 
 /* HELPER FUNCTIONS */
 void debug_drawDebugInfo(SDL_Renderer* renderer, double fps)
@@ -66,6 +66,8 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     freq = SDL_GetPerformanceFrequency();
     then = SDL_GetPerformanceCounter();
     
+    rtiow = std::make_unique<RayTracingInOneWeekend>(renderer);
+    
     return SDL_APP_CONTINUE;
 }
 
@@ -95,8 +97,11 @@ SDL_AppResult SDL_AppIterate(void* appstate)
     SDL_SetRenderDrawColor(renderer, 10, 10, 10, 255);
     SDL_RenderClear(renderer);
     
+    // calculate color for each pixel 
+    rtiow->samplePixels();
+    
     // draw current frame of RTIOW
-    rtiow.draw();
+    rtiow->draw();
     
     // draw fps and elapsed time
     debug_drawDebugInfo(renderer, fps);
