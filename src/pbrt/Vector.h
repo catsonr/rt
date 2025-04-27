@@ -1,9 +1,16 @@
 /*
-    Vector is a class that represents a single 3D vector (x, y, z) 
+    Vector is a class that represents a single 3D vector, and thus has three members:
+        float x, y, z
 
     Normal is a class that represents a single 3D normal
-    Normal is effectively a Vector, but they are treated explicitly as different types of data since they do not operate
-    exactly the same, and should not be treated as the same thing. though they are very similar
+        Normal is effectively a Vector, but they are treated explicitly
+        as different types of data since they do not operate exactly
+        the same, and should not be treated as the same thing
+        they can however be cast back and forth between one another 
+            e.g.: Normal n = Normal(v)
+                  Vector v = Vector(n)
+                  
+    Vector.h also defines Normal
 */
 
 #ifndef VECTOR_H
@@ -166,16 +173,16 @@ public:
     explicit Normal(const Vector& v);
     
     /* PUBLIC METHODS */
-    float lengthSquared() const
+    inline float lengthSquared() const
     {
         return x*x + y*y + z*z;
     }
-    float length() const
+    inline float length() const
     {
        return sqrtf( lengthSquared() );
     }
     
-    /* INLINE OPERATOR OVERLOADS */
+    /* OPERATOR OVERLOADS */
     inline Normal operator+(const Normal& n) const
     {
         return Normal(x + n.x, y + n.y, z + n.z);

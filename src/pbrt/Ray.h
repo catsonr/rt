@@ -11,7 +11,7 @@
 #ifndef RAY_H
 #define RAY_H
 
-#include "globals.h"
+#include "pbrt.h"
 #include "Point.h"
 
 class Ray

@@ -1,6 +1,6 @@
 /*
    the Bbox class is a rectangular 3D bounding box
-   it is defined by two points, which can be thought of as the bottom left and top right of the bounding box
+   it is defined by two Points, which can be thought of as the bottom left and top right of the bounding box
    (which will be referred to as p_min and p_max)
    
    if p_min <= p <= p_max

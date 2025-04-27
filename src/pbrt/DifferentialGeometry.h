@@ -9,6 +9,8 @@
         * the parametric partial derivatives del_p/del_u and del_p/del_v
         * the parametric partial derivatives of change in surface normal (slope) del_n/del_u and del_n/del_v
         * a pointer to the Shape it lies on
+
+    these values are expected to be in world space
 */
 
 #ifndef DIFFERENTIALGEOMERTY_H

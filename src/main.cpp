@@ -3,15 +3,15 @@
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL_gpu.h>
 
-#include <inttypes.h>
-
-#include "pbrt/globals.h"
+#include "pbrt/pbrt.h"
 #include "pbrt/MathExam.h"
+
+#include "rtiow/rtiow.h"
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
 
-#define WINDOW_TITLE "SDL3 test :3"
+#define WINDOW_TITLE "rt!"
 
 // fps stuff 
 static Uint64 then = 0, now = 0;
@@ -45,24 +45,27 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 {
     printf("program initializing ...\n");
     
-    me::test();
-
-    // stop program before it creates a window
-    return SDL_APP_SUCCESS;
-
+    // initialize SDL
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         SDL_Log("failed to initialize SDL3: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
 
+    // open window and create renderer
     if (!SDL_CreateWindowAndRenderer(WINDOW_TITLE, rt::CANVAS_WIDTH, rt::CANVAS_HEIGHT, SDL_WINDOW_HIGH_PIXEL_DENSITY, &window, &renderer)) {
         SDL_Log("failed to create window and/or renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
     
+    // scale renderer
     SDL_SetRenderScale(renderer, debug_textScale, debug_textScale);
+    
+    // fps stuff
     freq = SDL_GetPerformanceFrequency();
     then = SDL_GetPerformanceCounter();
+    
+    // RTIOW initialization
+    RayTracingInOneWeekend r;
 
     return SDL_APP_CONTINUE;
 }
@@ -80,7 +83,6 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
 /* SDL_AppIterate -> runs every frame */
 SDL_AppResult SDL_AppIterate(void* appstate)
 {
-
     // calculate fps
     now = SDL_GetPerformanceCounter();
     Uint64 dt = now - then;

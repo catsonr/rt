@@ -21,4 +21,9 @@ file(GLOB_RECURSE PROJECT_SOURCES
 
 add_executable(a.out ${PROJECT_SOURCES})
 
+target_include_directories(a.out PRIVATE
+  ${CMAKE_SOURCE_DIR}/src/pbrt
+  ${CMAKE_SOURCE_DIR}/src/rtiow
+)
+
 target_link_libraries(a.out PRIVATE SDL3::SDL3)

@@ -1,3 +1,8 @@
+/*
+   contains global variables for anything rt related
+   contained within namespace rt
+*/
+
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
@@ -70,6 +75,7 @@ namespace rt
     }
     
     // returns a (unit) vector pointed at a point on a sphere
+    // using spherical coordinates
     inline Vector sphericalDirection(float sinTheta, float cosTheta, float phi)
     {
         return Vector(
@@ -78,19 +84,19 @@ namespace rt
                 cosTheta
         );
     }
-    inline Vector sphericalDirection(float sinTheta, float cosTheta, float phi, const Vector& x, const Vector& y, const Vector& z)
+    /*inline Vector sphericalDirection(float sinTheta, float cosTheta, float phi, const Vector& x, const Vector& y, const Vector& z)
     {
         return x * sinTheta * cosf(phi) +
         y * sinTheta * sinf(phi) +
         z * cosTheta;
-    }
+    }*/
     
-    // returns the theta or phi component of Vector v in spherical coordinates
-    // assumes v is normalized
+    // returns theta component of Vector v (in spherical coords)
     inline float sphericalTheta(const Vector& v)
     {
         return acosf(v.z);
     }
+    // returns 
     inline float sphericalPhi(const Vector& v)
     {
         float p = atan2f(v.y, v.x);
