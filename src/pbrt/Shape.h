@@ -24,7 +24,9 @@ public:
         world_to_object(object_to_world.getInverse()),
         reverseOrientation(reverseOrientation),
         transformSwapsHandedness( object_to_world.swapsHandedness() )
-    {}
+    {
+        printf("Shape initialized!\n");
+    }
     
     /* VIRTUAL METHODS */
     virtual Bbox objectBound() const = 0;

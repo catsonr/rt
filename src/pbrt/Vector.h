@@ -274,7 +274,7 @@ inline Vector::Vector(const Normal& n) :
 
 inline Normal::Normal(const Vector& v) :
     x(v.x),
-    y(v.z),
+    y(v.y),
     z(v.z)
 {}
 

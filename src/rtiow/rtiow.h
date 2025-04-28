@@ -7,7 +7,7 @@
 
 #include "pbrt.h"
 
-class Shape;
+#include "Sphere.h"
 #include "Camera.h"
 #include "Sample.h"
 
@@ -18,7 +18,7 @@ public:
     unsigned int width { rt::CANVAS_WIDTH };
     unsigned int height { rt::CANVAS_HEIGHT };
 
-    std::vector<Shape>* shapes { nullptr };
+    std::vector<std::shared_ptr<Shape>> shapes;
     std::vector<uint32_t> canvas = std::vector<uint32_t>(width * height);
 
     SDL_Renderer* renderer { nullptr };
@@ -34,15 +34,20 @@ public:
     RayTracingInOneWeekend(SDL_Renderer* renderer) :
         renderer(renderer)
     {
-        printf("RTIOW: creating texture ...\n");
+        printf("[RTIOW] creating texture ...\n");
         texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, width, height);
-        //SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_NONE); // turns off blend so alpha is ignored
+        
+        printf("[RTIOW] creating shapes ...\n");
+        Transform world_to_sphere;
+        std::shared_ptr<Sphere> sphere = std::make_shared<Sphere>(world_to_sphere.getInverse(), false, 1.0f);
+
+        shapes.push_back(sphere);
     }
     
     /* DECONSTRUCTORS */
     ~RayTracingInOneWeekend()
     {
-        printf("RTIOW: cleaning up ...\n");
+        printf("[RTIOW] cleaning up ...\n");
         if(texture) SDL_DestroyTexture(texture);
     }
     
@@ -51,13 +56,13 @@ public:
     {
         t += dt;
 
-        printf("RTIOW: ticked time by %f\n", dt);
+        printf("[RTIOW] ticked time by %f\n", dt);
     }
     
     // fills canvas with colors from sampler
     void samplePixels()
     {
-        //printf("RTIOW: sampling pixels ...\n");
+        printf("[RTIOW] sampling pixels ...\n");
         
         for(unsigned y = 0; y < height; y++)
         {
@@ -72,11 +77,11 @@ public:
             }
         }
     }
-    
+
     // draws canvas to SDL texture
     inline void draw()
     {
-        //printf("RTIOW: drawing frame ...\n");
+        //printf("[RTIOW] drawing frame ...\n");
         
         SDL_UpdateTexture(texture, nullptr, canvas.data(), width * sizeof(uint32_t));
         SDL_RenderTexture(renderer, texture, nullptr, nullptr);

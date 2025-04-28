@@ -24,6 +24,7 @@ add_executable(a.out ${PROJECT_SOURCES})
 target_include_directories(a.out PRIVATE
   ${CMAKE_SOURCE_DIR}/src/pbrt
   ${CMAKE_SOURCE_DIR}/src/rtiow
+  ${CMAKE_SOURCE_DIR}/src/test
 )
 
 target_link_libraries(a.out PRIVATE SDL3::SDL3)

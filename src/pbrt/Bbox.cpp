@@ -62,8 +62,9 @@ bool Bbox::intersectsP(const Ray& ray, float* t_hit0, float* t_hit1) const
         
         if(t_near > t_far) std::swap(t_near, t_far);
         
-        t0 = t_near > t0 ? t_near : t0;
-        t1 = t_near > t1 ? t_near : t1;
+        // this differs from pbrt, but it's the same idea
+        t0 = std::max(t0, t_near);
+        t1 = std::min(t1, t_far);
         
         if(t0 > t1) return false;
     }

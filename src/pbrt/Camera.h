@@ -30,7 +30,9 @@ public:
         shutter_open(shutter_open),
         shutter_close(shutter_close),
         film(film)
-    {}
+    {
+        printf("Camera initialized!\n");
+    }
 
     /* VIRTUAL METHODS */
     virtual float generateRay(Sample& sample, Ray* ray) const = 0;

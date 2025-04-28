@@ -4,9 +4,10 @@
 #include <SDL3/SDL_gpu.h>
 
 #include "pbrt/pbrt.h"
-#include "pbrt/MathExam.h"
 
 #include "rtiow/rtiow.h"
+
+#include "test/test.h"
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
@@ -45,19 +46,23 @@ void debug_drawDebugInfo(SDL_Renderer* renderer, double fps)
 /* SDL_AppInit -> executed at startup */
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 {
-    printf("program initializing ...\n");
+    printf("[test] running all tests!\n");
+    test::run_all_tests();
+
+    printf("[rt] initializing ...\n");
     
     // initialize SDL
     if (!SDL_Init(SDL_INIT_VIDEO)) {
-        SDL_Log("failed to initialize SDL3: %s", SDL_GetError());
+        SDL_Log("[sdl] failed to initialize SDL3: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
 
     // open window and create renderer
     if (!SDL_CreateWindowAndRenderer(WINDOW_TITLE, rt::CANVAS_WIDTH, rt::CANVAS_HEIGHT, SDL_WINDOW_HIGH_PIXEL_DENSITY, &window, &renderer)) {
-        SDL_Log("failed to create window and/or renderer: %s", SDL_GetError());
+        SDL_Log("[sdl] failed to create window and/or renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
+    printf("[rt] created window of size (%i x %i)\n", rt::CANVAS_WIDTH, rt::CANVAS_HEIGHT);
     
     // scale renderer
     SDL_SetRenderScale(renderer, debug_textScale, debug_textScale);
@@ -67,6 +72,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     then = SDL_GetPerformanceCounter();
     
     rtiow = std::make_unique<RayTracingInOneWeekend>(renderer);
+    rtiow->samplePixels();
     
     return SDL_APP_CONTINUE;
 }
@@ -97,9 +103,6 @@ SDL_AppResult SDL_AppIterate(void* appstate)
     SDL_SetRenderDrawColor(renderer, 10, 10, 10, 255);
     SDL_RenderClear(renderer);
     
-    // calculate color for each pixel 
-    rtiow->samplePixels();
-    
     // draw current frame of RTIOW
     rtiow->draw();
     
@@ -115,5 +118,5 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 /* SDL_AppQuit -> exectued at shutdown */
 void SDL_AppQuit(void* appstate, SDL_AppResult result)
 {
-    printf("program shutting down ...\n");
+    printf("[rt] shutting down ... (ran for %.1f seconds)\n", timeElapsed);
 }

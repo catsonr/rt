@@ -13,7 +13,7 @@
     these values are expected to be in world space
 */
 
-#ifndef DIFFERENTIALGEOMERTY_H
+#ifndef DIFFERENTIALGEOMETRY_H
 #define DIFFERENTIALGEOMETRY_H
 
 #include "Point.h"

@@ -28,6 +28,14 @@ struct Sample
     float **oneD, **twoD;
     
     /* CONSTRUCTORS */
+    // default constructor not defined by pbrt
+    Sample() :
+        image_x(INFINITY),
+        image_y(INFINITY),
+        lens_u(INFINITY),
+        lens_v(INFINITY),
+        time(0.0f)
+    {}
     Sample(float image_x, float image_y, float lens_u, float lens_v, float time):
         image_x(image_x),
         image_y(image_y),
@@ -57,7 +65,9 @@ public:
         y_start(y_start),
         y_end(y_end),
         samplesPerPixel(samplesPerPixel)
-    {}
+    {
+        printf("Sampler initialized!\n");
+    }
     
     /* VIRTUAL FUNCTIONS */
     virtual bool getNextSample(Sample* sample) = 0;
@@ -93,7 +103,7 @@ private:
 public:
     /* CONSTRUCTORS */
     StratifiedSampler(int x_start, int x_end, int y_start, int y_end, int x_pixelSamples = 1, int y_pixelSamples = 1, bool jitter = false) :
-        Sampler(x_start, y_end, y_start, y_end, x_pixelSamples * y_pixelSamples),
+        Sampler(x_start, x_end, y_start, y_end, x_pixelSamples * y_pixelSamples),
         jitter(jitter),
         x_pos(x_start),
         y_pos(y_start),
@@ -145,6 +155,13 @@ public:
 
             // generate stratified camera samples for (x_pos, y_pos)
             generateStratifiedCameraSamples();
+            
+            // remove me!!!!
+            for(int i = 0; i < 2 * x_pixelSamples * y_pixelSamples; i+= 2) {
+                imageSamples[i] += x_pos;
+                imageSamples[i + 1] += x_pos;
+            }
+            sample_pos = 0;
         }
 
         // return next StratifiedSampler sample point

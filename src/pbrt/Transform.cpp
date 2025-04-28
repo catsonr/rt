@@ -58,7 +58,7 @@ Transform Transform::translate(const Vector& delta)
     std::shared_ptr<Mat4> m_new_inv = std::make_shared<Mat4>(
         1, 0, 0, -delta.x,
         0, 1, 0, -delta.y,
-        0, 0, 0, -delta.z,
+        0, 0, 1, -delta.z,
         0, 0, 0, 1
     );
     
@@ -150,9 +150,9 @@ Transform Transform::lookAt(const Point& pos, const Point& lookingAt, const Vect
     mat[1][1] = newUp.y;
     mat[2][1] = newUp.z;
     mat[3][1] = 0.0f;
-    mat[0][2] = dir.x;
-    mat[1][2] = dir.y;
-    mat[2][2] = dir.z;
+    mat[0][2] = -dir.x;
+    mat[1][2] = -dir.y; // these were positive but negative works? TODO: check pbrt to ensure correct sign
+    mat[2][2] = -dir.z;
     mat[3][2] = 0.0f;
 
     Mat4* camera_to_world = new Mat4(mat);
@@ -163,6 +163,16 @@ Transform Transform::lookAt(const Point& pos, const Point& lookingAt, const Vect
 // implementation @ (pg. 263) of pbrt 2nd ed.
 Transform Transform::orthographic(float clip_near, float clip_far)
 {
+    // this was the supposed implementation
+    // TODO: check correct implementation
+    /*
     return Transform::scale( 1.0f, 1.0f, 1.0f / (clip_far - clip_near) ) *
         Transform::translate( Vector(0.0f, 0.0f, -clip_near) );
+    */
+    // chatgpt code
+
+    float mid = 0.5f*(clip_near + clip_far);
+    float scaleZ = 2.0f/(clip_far - clip_near);
+    return Transform::scale(1,1, scaleZ)
+         * Transform::translate(Vector(0,0, -mid));
 }
