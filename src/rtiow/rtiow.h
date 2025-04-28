@@ -17,7 +17,7 @@ public:
     /* PUBLIC MEMBERS */
     static const unsigned int width { rt::CANVAS_WIDTH };
     static const unsigned int height { rt::CANVAS_HEIGHT };
-    static constexpr float aspectRatio = width / height;
+    static constexpr float aspectRatio = float(width) / float(height);
 
     std::vector<std::shared_ptr<Shape>> shapes;
     std::vector<uint32_t> canvas = std::vector<uint32_t>(width * height);
@@ -26,16 +26,20 @@ public:
     SDL_Texture* texture = { nullptr };
 
     float t { 0.0f };
-    
-    const float screen[4] { -1, 1, -1/aspectRatio, 1/aspectRatio };
+
+    // camera stuff
+    const float screen[4]{
+        -aspectRatio, // x_min
+        aspectRatio, // x_max
+        -1, // y_min
+        1 // y_max
+    };
     float clip_near { 1e-3f };
     float clip_far { 10.0f };
     float shutter_open { 0.0f };
     float shutter_close { 0.0f };
     float lensRadius { 1.0f };
     float focalDistance { 1.0f };
-    //Transform world_to_camera = Transform::translate( Vector(0, 0, 1) ); 
-    //OrthographicCamera camera { world_to_camera, screen, clip_near, clip_far, shutter_open, shutter_close, lensRadius, focalDistance };
     Transform camera_to_world = Transform::translate( Vector(0, 0, 1) );
     OrthographicCamera camera {
         camera_to_world,
@@ -48,6 +52,7 @@ public:
         focalDistance
     };
 
+    // sampler stuff
     const int x_start = 0, x_end = width;
     const int y_start = 0, y_end = height;
     const int x_samples = 1, y_samples = 1;
@@ -62,11 +67,15 @@ public:
         printf("[RTIOW] creating texture ...\n");
         texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, width, height);
         
+        // shape stuff
         printf("[RTIOW] creating shapes ...\n");
         Transform world_to_sphere = Transform::translate( Vector(0, 0, -4.0) );
         std::shared_ptr<Sphere> sphere = std::make_shared<Sphere>(world_to_sphere.getInverse(), false, 1.0f);
+        Transform world_to_sphere2 = Transform::translate( Vector(0.5, 0.5, -4.0) );
+        std::shared_ptr<Sphere> sphere2 = std::make_shared<Sphere>(world_to_sphere2.getInverse(), false, 0.5f);
 
         shapes.push_back(sphere);
+        shapes.push_back(sphere2);
     }
     
     /* DECONSTRUCTORS */
@@ -121,16 +130,6 @@ public:
             camera.generateRay(sample, &ray);
             //printf("\tray o = (%.2f %.2f %.2f)\n", ray.o.x, ray.o.y, ray.o.z);
             //printf("\tray d = (%.2f %.2f %.2f)\n", ray.d.x, ray.d.y, ray.d.z);
-            
-            if(samplerSampleCount < 10)
-            {
-                if (samplerSampleCount < 10) {
-                    printf("ray %d: img=(%.2f,%.2f) o=(%.2f,%.2f,%.2f) d=(%.2f,%.2f,%.2f)\n",
-                        samplerSampleCount, sample.image_x, sample.image_y,
-                        ray.o.x, ray.o.y, ray.o.z,
-                        ray.d.x, ray.d.y, ray.d.z);
-                }
-            }
 
             // test ray intersection on all shapes
             bool hit = false;
