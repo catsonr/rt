@@ -104,9 +104,30 @@ public:
         return true;
     }
     
+    // this does not follow the pbrt implementation, but should still work 
     bool doesIntersect(const Ray& ray) const override
     {
-        return intersect(ray, nullptr, nullptr); // this can be done much better, but it does work. proper implimentation on (pg. 107) of pbrt 2nd ed.
+        Ray r = world_to_object(ray);
+
+        float A = dot(r.d, r.d);
+        float B = 2.0f * (r.d.x*r.o.x + r.d.y*r.o.y + r.d.y*r.o.y);
+        float C = (r.o.x*r.o.x + r.o.y*r.o.y + r.o.z*r.o.z) - radius * radius;
+        
+        float t0, t1;
+        if( !rt::solveQuadratic(A, B, C, &t0, &t1) ) return false;
+        
+        if(t0 > ray.t_max || t1 < ray.t_min) return false;
+        
+        float thit = t0;
+        if(thit < ray.t_min)
+        {
+            thit = t1;
+            if(thit > ray.t_max) return false;
+        }
+        
+        // TODO: either follow pbrt implementation or handle partial spheres correctly here
+        
+        return true;
     }
 };
 

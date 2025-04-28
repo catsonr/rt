@@ -65,9 +65,7 @@ public:
         y_start(y_start),
         y_end(y_end),
         samplesPerPixel(samplesPerPixel)
-    {
-        printf("Sampler initialized!\n");
-    }
+    {}
     
     /* VIRTUAL FUNCTIONS */
     virtual bool getNextSample(Sample* sample) = 0;
@@ -92,12 +90,30 @@ private:
     float *imageSamples, *lensSamples, *timeSamples;
     
     /* PRIVATE METHODS */
-    // generate stratified camera samples for (x_pos, y_pos) @ (pg. 308) of pbrt 2nd ed.
     void generateStratifiedCameraSamples()
     {
+        int n = x_pixelSamples * y_pixelSamples;
+        
+        // image samples
         rt::stratifiedSample2D(imageSamples, x_pixelSamples, y_pixelSamples, jitter);
+
+        // shift stratified image samples to pixel coordinates (raster space)
+        for(int o = 0; o < 2 * x_pixelSamples * y_pixelSamples; o += 2)
+        {
+            imageSamples[o]     += x_pos;
+            imageSamples[o + 1] += y_pos;
+        }
+
+        // lens samples
         rt::stratifiedSample2D(lensSamples, x_pixelSamples, y_pixelSamples, jitter);
-        rt::stratifiedSample1D(timeSamples, x_pixelSamples * y_pixelSamples, jitter);
+        // time samples
+        rt::stratifiedSample1D(timeSamples, n, jitter);
+
+        // decorrelate sample dimensions
+        rt::shuffle(lensSamples, x_pixelSamples * y_pixelSamples, 2);
+        rt::shuffle(timeSamples, x_pixelSamples * y_pixelSamples, 1);
+
+        sample_pos = 0;
     }
 
 public:
@@ -115,19 +131,7 @@ public:
         lensSamples = imageSamples + 2 * x_pixelSamples * y_pixelSamples;
         timeSamples = lensSamples + 2 * x_pixelSamples * y_pixelSamples;
 
-        // generate stratified camera samples for (x_pos, y_pos)
         generateStratifiedCameraSamples();
-        
-        // shift stratified image samples to pixel coordinates
-        for(int o = 0; o < 2 * x_pixelSamples * y_pixelSamples; o += 2)
-        {
-            imageSamples[o]     += x_pos;
-            imageSamples[o + 1] += y_pos;
-        }
-
-        // decorrelate sample dimensions
-        rt::shuffle(lensSamples, x_pixelSamples * y_pixelSamples, 2);
-        rt::shuffle(timeSamples, x_pixelSamples * y_pixelSamples, 1);
 
         sample_pos = 0;
     }
@@ -138,12 +142,14 @@ public:
         return size;
     }
     
-    // implementation @ (pg. 310) of pbrt 2nd 3d.
+    // implementation @ (pg. 310) of pbrt 2nd ed.
     bool getNextSample(Sample* sample) override
     {
-        // compute new set of samples if needed for next pixel
-        if(sample_pos == x_pixelSamples * y_pixelSamples)
+        // if all samples for current pixel have been generated
+        if(sample_pos >= x_pixelSamples * y_pixelSamples)
         {
+            sample_pos = 0;
+
             // advance to next pixel for stratified sampling
             if(++x_pos == x_end)
             {
@@ -153,15 +159,7 @@ public:
             if(y_pos == y_end)
                 return false;
 
-            // generate stratified camera samples for (x_pos, y_pos)
             generateStratifiedCameraSamples();
-            
-            // remove me!!!!
-            for(int i = 0; i < 2 * x_pixelSamples * y_pixelSamples; i+= 2) {
-                imageSamples[i] += x_pos;
-                imageSamples[i + 1] += x_pos;
-            }
-            sample_pos = 0;
         }
 
         // return next StratifiedSampler sample point
