@@ -43,7 +43,8 @@ public:
     
     // performs ray-sphere intersection test and saves results
     // returns true if there's an intersection
-    bool intersect(const Ray& ray, float* t_hit, DifferentialGeometry* dg) const override // implimentation at (pg. 99) of pbrt 2nd ed.
+    // implimentation at (pg. 99) of pbrt 2nd ed.
+    bool intersect(const Ray& ray, float* t_hit, DifferentialGeometry* dg) const override
     {
         // transform ray into object space
         Ray r_objspc;
@@ -79,21 +80,17 @@ public:
             if(t1 > ray.t_max) return false;
             
             thit = t1;
+            
+            // recompute p_hit
+            p_hit = r_objspc(thit);
+            phi = atan2f(p_hit.y, p_hit.x);
+            if(phi < 0.0f) phi += rt::TWOPI;
 
             if(p_hit.z < z_min || p_hit.z > z_max || phi > phi_max) return false;
         }
 
-        // find parametric representation of sphere hit
-        /*
-        float u = phi / phi_max;
-        float theta = acosf( p_hit.z / radius );
-        float v = (theta - theta_min) / (theta_max - theta_min);
-        */
-        
+        // TODO: get parametric representation and update differentialgeometry
         // these implimentations start at (pg. 102) in pbrt 2nd ed.
-        // compute dpdu and dpdv
-        // compute dndu and dndv
-        // initialize DifferentialGeometry from parametric information
 
         // update t_hit for quadratic intersection
         *t_hit = thit;

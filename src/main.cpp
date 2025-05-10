@@ -76,7 +76,9 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     SDL_WindowFlags windowflags =
         SDL_WINDOW_HIGH_PIXEL_DENSITY |
         SDL_WINDOW_ALWAYS_ON_TOP | 
-        SDL_WINDOW_RESIZABLE
+        SDL_WINDOW_RESIZABLE |
+        SDL_WINDOW_INPUT_FOCUS | 
+        SDL_WINDOW_MOUSE_FOCUS
     ;
     if( !SDL_CreateWindowAndRenderer(bbxstate->window_title, bbxstate->targetCanvasWidth, bbxstate->targetCanvasHeight, windowflags, &window, &renderer) ) {
         SDL_Log("[sdl] failed to create window and/or renderer: %s", SDL_GetError());
@@ -143,9 +145,6 @@ SDL_AppResult SDL_AppIterate(void* appstate)
     
     // draw fps and elapsed time
     debug_drawDebugInfo(renderer, fps);
-
-    SDL_SetRenderDrawColor(renderer, 10, 10, 10, 255);
-    SDL_RenderLine(renderer, 0, 0, bbxstate->canvasX, bbxstate->canvasY);
 
     // blip renderer to screen
     SDL_RenderPresent(renderer);

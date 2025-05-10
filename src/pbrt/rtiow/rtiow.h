@@ -20,7 +20,6 @@ public:
     static constexpr float aspectRatio = float(width) / float(height);
 
     std::vector<std::shared_ptr<Shape>> shapes;
-    std::vector<uint32_t> canvas = std::vector<uint32_t>(width * height);
 
     SDL_Renderer* renderer { nullptr };
     SDL_Texture* texture { nullptr };
@@ -36,7 +35,7 @@ public:
         -1, // y_min
         1 // y_max
     };
-    float clip_near { 1e-3f };
+    float clip_near { 0.0f };
     float clip_far { 10.0f };
     float shutter_open { 0.0f };
     float shutter_close { 0.0f };
@@ -74,9 +73,9 @@ public:
         
         float zmin = -1;
         float zmax = 1;
-        float phi = rt::TWOPI * 0.7;
+        float phi = rt::TWOPI * 0.8;
 
-        Transform world_to_sphere = Transform::rotateX(rt::PI / 2) * Transform::translate( Vector(0, 0, -4.0) );
+        Transform world_to_sphere = Transform::rotateX(rt::PI * 0.1) * Transform::translate( Vector(0.0, 0.0, -4.0) );
         std::shared_ptr<Sphere> sphere = std::make_shared<Sphere>(world_to_sphere.getInverse(), false, 1.0f, zmin, zmax, phi);
         
         shapes.push_back(sphere);
@@ -96,32 +95,46 @@ public:
 
         printf("[RTIOW] ticked time by %f\n", dt);
     }
-    
-    // fills canvas with colors to test if it's working
-    void canvasTest()
+
+    // writes directly to SDL texture, as a test
+    void textureTest()
     {
-        printf("[RTIOW] testing canvas ...\n");
-        
-        for(unsigned y = 0; y < height; y++)
+        void *pixels = nullptr;
+        int pitch = 0;
+        if( SDL_LockTexture(texture, nullptr, &pixels, &pitch) != 0)
         {
-            for(unsigned x = 0; x < width; x++)
+            printf("[RTIOW] failed to lock texture: %s\n", SDL_GetError());
+        }
+
+        // assume ARGB8888 (1 uint32_t per pixel), pitch is in bytes
+        for (unsigned y = 0; y < height; ++y)
+        {
+            uint32_t *row = (uint32_t *)((uint8_t *)pixels + y * pitch);
+            for (unsigned x = 0; x < width; ++x)
             {
                 uint8_t r = uint8_t(255.0f * x / width);
                 uint8_t g = uint8_t(255.0f * y / height);
                 uint8_t b = 128;
                 uint8_t a = 255;
-                
-                canvas[y*width + x] = (r << 24) | (g << 16) | (b << 8) | a;
+
+                // SDL_PIXELFORMAT_RGBA8888 → R at highest bits
+                row[x] = (r << 24) | (g << 16) | (b << 8) | a;
             }
         }
+
+        SDL_UnlockTexture(texture);
     }
-    
+
     void samplePixels()
     {
         printf("[RTIOW] sampling pixels ...\n");
         
-        // fill the canvas array with all 0s (black, transparent)
-        //std::fill(canvas.begin(), canvas.end(), 0u);
+        void* pixels = nullptr;
+        int pitch = 0;
+        if( SDL_LockTexture(texture, nullptr, &pixels, &pitch) != 0)
+        {
+            printf("[RTIOW] failed to lock texture: %s\n", SDL_GetError());
+        }
         
         int samplerSampleCount = 0;
         // for each pixel 
@@ -163,21 +176,24 @@ public:
                 color = white * (1.0f - tt) + blue * tt;
             }
             
-            // put pixel color in canvas array
-            int ix = (int)sample.image_x;
-            int iy = (int)sample.image_y;
-            if (ix >= 0 && ix < (int)width && iy >= 0 && iy < (int)height) {
-                uint8_t r = (uint8_t)(255.0f * color.x);
-                uint8_t g = (uint8_t)(255.0f * color.y);
-                uint8_t b = (uint8_t)(255.0f * color.z);
-                uint8_t a = 255;
-                canvas[iy * width + ix] = (r << 24) | (g << 16) | (b << 8) | a;
-            } 
+            // put pixel color in SDL texture 
+            int ix = static_cast<int>(sample.image_x);
+            int iy = static_cast<int>(sample.image_y);
+            if(ix >= 0 && ix < static_cast<int>(width) && iy >= 0 && iy <= static_cast<int>(height))
+            {
+                uint8_t r = (u_int8_t)(255.0f * std::clamp(color.x, 0.0f, 1.0f));
+                uint8_t g = (u_int8_t)(255.0f * std::clamp(color.y, 0.0f, 1.0f));
+                uint8_t b = (u_int8_t)(255.0f * std::clamp(color.z, 0.0f, 1.0f));
+                uint8_t a = 255.0f;
+                
+                uint32_t* row = (uint32_t*)((uint8_t*)pixels + iy * pitch);
+                row[ix] = (r << 24) | (g << 16) | (b << 8) | a;
+            }
         }
         
         printf("\tsampler generated %i samples\n", samplerSampleCount);
 
-        SDL_UpdateTexture(texture, nullptr, canvas.data(), width * sizeof(uint32_t));
+        SDL_UnlockTexture(texture);
     }
 
     // draws canvas to SDL texture
