@@ -1,12 +1,12 @@
+/* SDL3 INCLUDES */
+/* after installation of SDL3 to the root directory, there should be a folder 'vendorded', which contains the build of SDL3 that is used */
 #define SDL_MAIN_USE_CALLBACKS 1  /* use the callbacks instead of main() */
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
-#include <SDL3/SDL_gpu.h>
 
+/* PBRT INCLUDES */
 #include "pbrt/pbrt.h"
-
 #include "rtiow/rtiow.h"
-
 #include "test/test.h"
 
 static SDL_Window *window = NULL;
@@ -18,7 +18,7 @@ static SDL_Renderer *renderer = NULL;
 static Uint64 then = 0, now = 0;
 static double timeElapsed = 0; // seconds
 static Uint64 freq = 0;
-const float debug_textScale = 1.0f;
+const float debug_textScale = 1.5f;
 
 // RTIOW stuff
 std::unique_ptr<RayTracingInOneWeekend> rtiow;
@@ -26,9 +26,9 @@ std::unique_ptr<RayTracingInOneWeekend> rtiow;
 /* HELPER FUNCTIONS */
 void debug_drawDebugInfo(SDL_Renderer* renderer, double fps)
 {
-    SDL_SetRenderDrawColor(renderer, 100, 200, 255, 255);
+    SDL_SetRenderDrawColor(renderer, 10, 10, 60, 255);
     
-    int debug_lineHeight = (int)SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * debug_textScale;
+    int debug_lineHeight = (int)SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * debug_textScale / debug_textScale;
 
     // create and draw debug_FPS string
     char debug_FPS[32];

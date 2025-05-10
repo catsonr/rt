@@ -15,15 +15,17 @@ struct RayTracingInOneWeekend
 {
 public:
     /* PUBLIC MEMBERS */
-    static const unsigned int width { rt::CANVAS_WIDTH };
-    static const unsigned int height { rt::CANVAS_HEIGHT };
+    static constexpr unsigned int width { rt::CANVAS_WIDTH };
+    static constexpr unsigned int height { rt::CANVAS_HEIGHT };
     static constexpr float aspectRatio = float(width) / float(height);
 
     std::vector<std::shared_ptr<Shape>> shapes;
     std::vector<uint32_t> canvas = std::vector<uint32_t>(width * height);
 
     SDL_Renderer* renderer { nullptr };
-    SDL_Texture* texture = { nullptr };
+    SDL_Texture* texture { nullptr };
+    void* pixels;
+    int pitch;
 
     float t { 0.0f };
 
@@ -69,13 +71,15 @@ public:
         
         // shape stuff
         printf("[RTIOW] creating shapes ...\n");
-        Transform world_to_sphere = Transform::translate( Vector(0, 0, -4.0) );
-        std::shared_ptr<Sphere> sphere = std::make_shared<Sphere>(world_to_sphere.getInverse(), false, 1.0f);
-        Transform world_to_sphere2 = Transform::translate( Vector(0.5, 0.5, -4.0) );
-        std::shared_ptr<Sphere> sphere2 = std::make_shared<Sphere>(world_to_sphere2.getInverse(), false, 0.5f);
+        
+        float zmin = -1;
+        float zmax = 1;
+        float phi = rt::TWOPI * 0.7;
 
+        Transform world_to_sphere = Transform::rotateX(rt::PI / 2) * Transform::translate( Vector(0, 0, -4.0) );
+        std::shared_ptr<Sphere> sphere = std::make_shared<Sphere>(world_to_sphere.getInverse(), false, 1.0f, zmin, zmax, phi);
+        
         shapes.push_back(sphere);
-        shapes.push_back(sphere2);
     }
     
     /* DECONSTRUCTORS */
@@ -117,28 +121,29 @@ public:
         printf("[RTIOW] sampling pixels ...\n");
         
         // fill the canvas array with all 0s (black, transparent)
-        std::fill(canvas.begin(), canvas.end(), 0u);
+        //std::fill(canvas.begin(), canvas.end(), 0u);
         
         int samplerSampleCount = 0;
         // for each pixel 
+        Ray ray; 
         while( sampler.getNextSample(&sample) )
         {
             //printf("sample %i : image_x=%f | image_y=%f\n", samplerSampleCount, sample.image_x, sample.image_y);
             samplerSampleCount++; 
 
-            Ray ray; 
             camera.generateRay(sample, &ray);
             //printf("\tray o = (%.2f %.2f %.2f)\n", ray.o.x, ray.o.y, ray.o.z);
-            //printf("\tray d = (%.2f %.2f %.2f)\n", ray.d.x, ray.d.y, ray.d.z);
+            //printf("\tray d = (%.2f %.2f %.2f)\n\n", ray.d.x, ray.d.y, ray.d.z);
 
             // test ray intersection on all shapes
             bool hit = false;
             for(auto& shape : shapes)
             {
-                if( shape->doesIntersect(ray) )
+                float thit = 0; // this it not actually used btw, it's just here so the intersection function can be called (for now)
+                if( shape->intersect(ray, &thit, nullptr) )
                 {
                     hit = true;
-                    //printf("hit something!\n");
+
                     break;
                 }
             }
@@ -147,7 +152,7 @@ public:
             Vector color;
             if(hit)
             {
-                color = Vector(1.0f, 0.0f, 1.0f); // purple 
+                color = Vector(0.9f, 0.2f, 0.9f); // purple 
             }
             else
             {
@@ -171,6 +176,8 @@ public:
         }
         
         printf("\tsampler generated %i samples\n", samplerSampleCount);
+
+        SDL_UpdateTexture(texture, nullptr, canvas.data(), width * sizeof(uint32_t));
     }
 
     // draws canvas to SDL texture
@@ -178,7 +185,9 @@ public:
     {
         //printf("[RTIOW] drawing frame ...\n");
         
-        SDL_UpdateTexture(texture, nullptr, canvas.data(), width * sizeof(uint32_t));
+        // texture should really only be updated if it's changed
+        //SDL_UpdateTexture(texture, nullptr, canvas.data(), width * sizeof(uint32_t));
+
         SDL_RenderTexture(renderer, texture, nullptr, nullptr);
     }
 };

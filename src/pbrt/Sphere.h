@@ -16,8 +16,8 @@ private:
     /* PRIVATE MEMBERS */
     float radius;
     float phi_max;
-    float z_min, z_max;
-    float theta_min, theta_max;
+    float z_min, z_max; // the range in which the sphere exists, in z values in object space
+    float theta_min, theta_max; // the range in which the sphere exists, sweeping around the z axis, in radians
 
 public:
     /* CONSTRUCTORS */
@@ -45,9 +45,6 @@ public:
     // returns true if there's an intersection
     bool intersect(const Ray& ray, float* t_hit, DifferentialGeometry* dg) const override // implimentation at (pg. 99) of pbrt 2nd ed.
     {
-        float phi;
-        Point p_hit;
-        
         // transform ray into object space
         Ray r_objspc;
         world_to_object(ray, &r_objspc);
@@ -70,6 +67,11 @@ public:
             thit = t1;
             if(thit > ray.t_max) return false;
         }
+
+        Point p_hit = r_objspc(thit);
+        float phi = atan2f(p_hit.y, p_hit.x);
+        if (phi < 0.0f) phi += rt::TWOPI;
+
         // test sphere intersection against clipping parameters
         if(p_hit.z < z_min || p_hit.z > z_max || phi > phi_max)
         {
@@ -77,11 +79,6 @@ public:
             if(t1 > ray.t_max) return false;
             
             thit = t1;
-
-            // compute sphere hit position and phi
-            p_hit = ray(thit);
-            phi = atan2f(p_hit.y, p_hit.x);
-            if (phi < 0.0f) phi += rt::TWOPI;
 
             if(p_hit.z < z_min || p_hit.z > z_max || phi > phi_max) return false;
         }
