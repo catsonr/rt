@@ -3,25 +3,35 @@
 #define SDL_MAIN_USE_CALLBACKS 1  /* use the callbacks instead of main() */
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <SDL3/SDL_render.h>
 
-/* PBRT INCLUDES */
+/* this is only for the rt namespace, which includes global defintitions like canvas width, and rng */
 #include "pbrt/pbrt.h"
 #include "rtiow/rtiow.h"
-#include "test/test.h"
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
 
-#define WINDOW_TITLE "rt!"
+struct BBXState
+{
+    bool running = true;
+    char window_title[32] = "rt!";
+    int targetCanvasWidth = rt::CANVAS_WIDTH;
+    int targetCanvasHeight = rt::CANVAS_HEIGHT;
+
+    int canvasX, canvasY;
+};
+
+BBXState* bbxstate;
+
+/* RTIOW stuff */
+std::unique_ptr<RayTracingInOneWeekend> rtiow;
 
 // fps stuff 
 static Uint64 then = 0, now = 0;
 static double timeElapsed = 0; // seconds
 static Uint64 freq = 0;
-const float debug_textScale = 1.5f;
-
-// RTIOW stuff
-std::unique_ptr<RayTracingInOneWeekend> rtiow;
+const float debug_textScale = 1.0f;
 
 /* HELPER FUNCTIONS */
 void debug_drawDebugInfo(SDL_Renderer* renderer, double fps)
@@ -41,38 +51,57 @@ void debug_drawDebugInfo(SDL_Renderer* renderer, double fps)
     SDL_RenderDebugText(renderer, 0, debug_lineHeight * 1, debug_timeElapsed);
 }
 
+void event_handleWindowResize(SDL_Renderer* renderer, BBXState* state)
+{
+    SDL_GetCurrentRenderOutputSize(renderer, &state->canvasX, &state->canvasY);
+    
+    printf("[bbx] updated canvas width and height to %i x %i\n", state->canvasX, state->canvasY);
+}
+
 /* SDL FUNCTIONS */
 
 /* SDL_AppInit -> executed at startup */
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 {
-    printf("[test] running all tests!\n");
-    test::run_all_tests();
-
-    printf("[rt] initializing ...\n");
+    bbxstate = new BBXState();
+    printf("[bbx] initializing ...\n");
     
     // initialize SDL
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
+    if( !SDL_Init(SDL_INIT_VIDEO) ) {
         SDL_Log("[sdl] failed to initialize SDL3: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
 
     // open window and create renderer
-    if (!SDL_CreateWindowAndRenderer(WINDOW_TITLE, rt::CANVAS_WIDTH, rt::CANVAS_HEIGHT, SDL_WINDOW_HIGH_PIXEL_DENSITY, &window, &renderer)) {
+    SDL_WindowFlags windowflags =
+        SDL_WINDOW_HIGH_PIXEL_DENSITY |
+        SDL_WINDOW_ALWAYS_ON_TOP | 
+        SDL_WINDOW_RESIZABLE
+    ;
+    if( !SDL_CreateWindowAndRenderer(bbxstate->window_title, bbxstate->targetCanvasWidth, bbxstate->targetCanvasHeight, windowflags, &window, &renderer) ) {
         SDL_Log("[sdl] failed to create window and/or renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
-    printf("[rt] created window of size (%i x %i)\n", rt::CANVAS_WIDTH, rt::CANVAS_HEIGHT);
+
+    event_handleWindowResize(renderer, bbxstate);
+    printf("[bbx] created window of size (%i x %i)\n", bbxstate->canvasX, bbxstate->canvasY);
+    
+    if( SDL_SetRenderVSync(renderer, SDL_RENDERER_VSYNC_ADAPTIVE) )
+    {
+        SDL_Log("[sdl] failed to enable vsync: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+    printf("[bbx] enabled vsync\n");
     
     // scale renderer
     SDL_SetRenderScale(renderer, debug_textScale, debug_textScale);
     
+    rtiow = std::make_unique<RayTracingInOneWeekend>(renderer);
+    rtiow->samplePixels();
+    
     // fps stuff
     freq = SDL_GetPerformanceFrequency();
     then = SDL_GetPerformanceCounter();
-    
-    rtiow = std::make_unique<RayTracingInOneWeekend>(renderer);
-    rtiow->samplePixels();
     
     return SDL_APP_CONTINUE;
 }
@@ -80,8 +109,14 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 /* SDL_AppEvent -> executed when event detected (mouse input, keypress, etc.) */
 SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
 {
-    if (event->type == SDL_EVENT_QUIT) {
+    if (event->type == SDL_EVENT_QUIT)
+    {
         return SDL_APP_SUCCESS;  /* end the program, reporting success to the OS. */
+    }
+    else if(event->type == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED) 
+    {
+        printf("[bbx-event] window resized!\n");
+        event_handleWindowResize(renderer, bbxstate);
     }
 
     return SDL_APP_CONTINUE;
@@ -100,7 +135,7 @@ SDL_AppResult SDL_AppIterate(void* appstate)
     timeElapsed += (double)dt / freq;
 
     // clear screen
-    SDL_SetRenderDrawColor(renderer, 10, 10, 10, 255);
+    SDL_SetRenderDrawColor(renderer, 233, 255, 211, 255);
     SDL_RenderClear(renderer);
     
     // draw current frame of RTIOW
@@ -108,6 +143,9 @@ SDL_AppResult SDL_AppIterate(void* appstate)
     
     // draw fps and elapsed time
     debug_drawDebugInfo(renderer, fps);
+
+    SDL_SetRenderDrawColor(renderer, 10, 10, 10, 255);
+    SDL_RenderLine(renderer, 0, 0, bbxstate->canvasX, bbxstate->canvasY);
 
     // blip renderer to screen
     SDL_RenderPresent(renderer);
@@ -118,5 +156,7 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 /* SDL_AppQuit -> exectued at shutdown */
 void SDL_AppQuit(void* appstate, SDL_AppResult result)
 {
+    delete bbxstate;
+
     printf("[rt] shutting down ... (ran for %.1f seconds)\n", timeElapsed);
 }

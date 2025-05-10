@@ -24,7 +24,7 @@ struct Sample
     float time;
 
     // integrator sample data @ (pg. 301) of pbrt 2nd ed.
-    std::vector<u_int> n1D, n2D;
+    std::vector<unsigned int> n1D, n2D;
     float **oneD, **twoD;
     
     /* CONSTRUCTORS */

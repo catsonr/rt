@@ -187,7 +187,7 @@ namespace rt
     {
         for(int i = 0; i < count; i++)
         {
-            u_int other = randomUInt() % count;
+            unsigned int other = randomUInt() % count;
             for(int j = 0; j < dimensions; j++)
                 std::swap(sample[dimensions*i + j], sample[dimensions*other + j]);
         }
